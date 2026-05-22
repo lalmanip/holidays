@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vivance-holidays-api
+  labels:
+    app: vivance-holidays-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vivance-holidays-api
+  template:
+    metadata:
+      labels:
+        app: vivance-holidays-api
+    spec:
+      containers:
+        - name: vivance-holidays-api
+          # CI/CD: kubectl set image deployment/vivance-holidays-api vivance-holidays-api=<user>/holidays-api:<version>-<sha>
+          image: vivance/holidays-api:dev-latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8095
+          env:
+            - name: SPRING_CONFIG_LOCATION
+              value: "file:/config/holidays-api.yaml"
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: java-mysql-secret
+                  key: username
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: java-mysql-secret
+                  key: password
+          readinessProbe:
+            httpGet:
+              path: /api-docs
+              port: 8095
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api-docs
+              port: 8095
+            initialDelaySeconds: 60
+            periodSeconds: 20
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+          volumeMounts:
+            - name: config-volume
+              mountPath: /config/holidays-api.yaml
+              subPath: holidays-api.yaml
+              readOnly: true
+      volumes:
+        - name: config-volume
+          configMap:
+            name: holidays-api-config

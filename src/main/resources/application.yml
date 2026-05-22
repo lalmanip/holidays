@@ -2,13 +2,13 @@ spring:
   application:
     name: vivance-holidays-api
   datasource:
-    url: jdbc:mysql://localhost:3306/vivance_java?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=utf8
-    username: ${DB_USER:root}
-    password: ${DB_PASSWORD:}
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:vivance_java}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=utf8}
+    username: ${SPRING_DATASOURCE_USERNAME:${DB_USER:root}}
+    password: ${SPRING_DATASOURCE_PASSWORD:${DB_PASSWORD:}}
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:validate}
     open-in-view: false
     properties:
       hibernate:
