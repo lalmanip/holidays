@@ -11,5 +11,6 @@ public class HolidaysApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(HolidaysApplication.class, args);
+         System.out.println("====== Holidays Application Started =======");
     }
 }
