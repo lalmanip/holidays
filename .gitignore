@@ -1,3 +1,11 @@
+# Maven / Spring Boot
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# Local config
+application-local.yml
+.env
+
 # Compiled class file
 *.class
 

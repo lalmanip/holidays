@@ -1,0 +1,13 @@
+# Copy to application-local.yml and activate with:
+#   SPRING_PROFILES_ACTIVE=local
+# or:  --spring.profiles.active=local
+
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/vivance?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: your_user
+    password: your_password
+
+vivance:
+  holidays:
+    cors-allowed-origins: http://localhost:3000
