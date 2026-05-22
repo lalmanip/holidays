@@ -31,4 +31,16 @@ public class HolidayPackageTerm {
     public String getTermText() {
         return termText;
     }
+
+    public void setTourPackage(HolidayTourPackage tourPackage) {
+        this.tourPackage = tourPackage;
+    }
+
+    public void setTermText(String termText) {
+        this.termText = termText;
+    }
+
+    public void setSortOrder(int sortOrder) {
+        this.sortOrder = sortOrder;
+    }
 }

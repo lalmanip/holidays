@@ -48,6 +48,14 @@ mvn spring-boot:run
 | GET | `/destinations/{slug}/packages?categoryCode=best-seller` | Package cards by category |
 | GET | `/packages/{pkgId}` | Full package detail (itinerary, details, pricing, terms) |
 
+### Backoffice (admin)
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/admin/packages` | Create destination + package + all child tables (one transaction) |
+
+See [docs/backoffice-create-holiday-package.md](docs/backoffice-create-holiday-package.md) for sample request/response JSON.
+
 Public reads filter `is_active = 1` and order by `sort_order` ascending.
 
 ## Project layout

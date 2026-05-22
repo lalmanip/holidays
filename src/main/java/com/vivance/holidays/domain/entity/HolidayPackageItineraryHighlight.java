@@ -31,4 +31,16 @@ public class HolidayPackageItineraryHighlight {
     public String getHighlight() {
         return highlight;
     }
+
+    public void setItineraryDay(HolidayPackageItineraryDay itineraryDay) {
+        this.itineraryDay = itineraryDay;
+    }
+
+    public void setHighlight(String highlight) {
+        this.highlight = highlight;
+    }
+
+    public void setSortOrder(int sortOrder) {
+        this.sortOrder = sortOrder;
+    }
 }

@@ -33,4 +33,5 @@ springdoc:
 logging:
   level:
     com.vivance.holidays: INFO
+    com.vivance.holidays.config.ApiLoggingFilter: INFO
     org.hibernate.SQL: WARN

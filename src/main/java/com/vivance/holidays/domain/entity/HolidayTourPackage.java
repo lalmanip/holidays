@@ -198,4 +198,64 @@ public class HolidayTourPackage {
     public HolidayPackagePricingConfig getPricingConfig() {
         return pricingConfig;
     }
+
+    public void setPkgId(String pkgId) {
+        this.pkgId = pkgId;
+    }
+
+    public void setSlug(String slug) {
+        this.slug = slug;
+    }
+
+    public void setDestination(HolidayDestination destination) {
+        this.destination = destination;
+    }
+
+    public void setCategory(HolidayPackageCategory category) {
+        this.category = category;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
+    public void setPrice(BigDecimal price) {
+        this.price = price;
+    }
+
+    public void setDays(int days) {
+        this.days = days;
+    }
+
+    public void setNights(int nights) {
+        this.nights = nights;
+    }
+
+    public void setRating(BigDecimal rating) {
+        this.rating = rating;
+    }
+
+    public void setReviewCount(int reviewCount) {
+        this.reviewCount = reviewCount;
+    }
+
+    public void setBadge(String badge) {
+        this.badge = badge;
+    }
+
+    public void setHasDetailPage(boolean hasDetailPage) {
+        this.hasDetailPage = hasDetailPage;
+    }
+
+    public void setSortOrder(int sortOrder) {
+        this.sortOrder = sortOrder;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
 }
