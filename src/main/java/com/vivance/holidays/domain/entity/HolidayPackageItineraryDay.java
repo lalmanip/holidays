@@ -30,7 +30,7 @@ public class HolidayPackageItineraryDay {
     @Column(name = "day_number", nullable = false)
     private int dayNumber;
 
-    @Column(nullable = false, length = 200)
+    @Column(nullable = false, length = 300)
     private String title;
 
     @Column(columnDefinition = "TEXT")

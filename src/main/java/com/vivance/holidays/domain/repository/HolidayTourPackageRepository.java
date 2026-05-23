@@ -14,6 +14,13 @@ public interface HolidayTourPackageRepository extends JpaRepository<HolidayTourP
 
     boolean existsByDestinationIdAndSlug(Long destinationId, String slug);
 
+    Optional<HolidayTourPackage> findByPkgId(String pkgId);
+
+    boolean existsByDestinationIdAndSlugAndIdNot(Long destinationId, String slug, Long id);
+
+    @EntityGraph(attributePaths = {"destination", "category"})
+    Optional<HolidayTourPackage> findWithDestinationByPkgId(String pkgId);
+
     @EntityGraph(attributePaths = {"destination", "category", "inclusions"})
     List<HolidayTourPackage> findByDestinationIdAndCategoryIdAndActiveTrueOrderBySortOrderAsc(
             Long destinationId, Long categoryId);

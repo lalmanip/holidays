@@ -1,24 +1,51 @@
-# Backoffice — Create Holiday Package API
+# Backoffice — Create & Update Holiday Package API
 
-## Endpoint
+## Endpoints
 
-| | |
-|---|---|
-| **Method** | `POST` |
-| **URL** | `/api/v1/holidays/admin/packages` |
-| **Content-Type** | `application/json` |
-| **Success** | `201 Created` |
+| Action | Method | URL | Success |
+|--------|--------|-----|---------|
+| Create | `POST` | `/api/v1/holidays/admin/packages` | `201 Created` |
+| Update | `PUT` | `/api/v1/holidays/admin/packages/{pkgId}` | `200 OK` |
+
+**Content-Type:** `application/json` for both.
 
 **Base URL (local):** `http://localhost:8095`  
 **Base URL (dev):** `http://<your-host>:30095` (NodePort) or your ingress URL
 
 ---
 
+## Update (`PUT /packages/{pkgId}`)
+
+Use the **same JSON body as create**. The path `{pkgId}` must match `tourPackage.pkgId` in the body.
+
+| Destination in body | Behaviour |
+|-------------------|-----------|
+| Omitted | Keeps the package linked to its current destination |
+| `destination` object | Updates that linked destination in place |
+| `existingDestinationSlug` | Re-links the package to another destination |
+
+Child rows (inclusions, itinerary, sections, hotels, terms, pricing) are **deleted and re-inserted** from the request — send the full package payload on every edit.
+
+**Example:**
+
+```http
+PUT /api/v1/holidays/admin/packages/PKG-GAYA-CLASSIC-001 HTTP/1.1
+Content-Type: application/json
+```
+
+(Same JSON as create; `tourPackage.pkgId` must be `PKG-GAYA-CLASSIC-001`.)
+
+**Response:** same shape as create, with `"message": "Holiday package updated successfully"`.
+
+---
+
+## Create (`POST /packages`)
+
 ## What it does
 
 Creates rows in one database transaction (IDs are auto-generated; do not send primary keys):
 
-1. `holidays_destinations` — **new** destination, **or** link to `existingDestinationSlug`
+1. `holidays_destinations` — **creates** a destination when `destination.slug` is new, **reuses** the existing row when the slug already exists (so multiple packages can be added under the same destination with the same request shape)
 2. `holidays_tour_packages`
 3. `holidays_package_inclusions`
 4. `holidays_package_itinerary_days` + `holidays_package_itinerary_highlights`
@@ -230,9 +257,9 @@ Content-Type: application/json
 
 | HTTP | When |
 |------|------|
-| `400` | Validation failed, missing destination, or both `destination` and `existingDestinationSlug` |
+| `400` | Validation failed, or missing destination |
 | `404` | Unknown `categoryCode` or `existingDestinationSlug` |
-| `409` | Duplicate destination `slug`, duplicate `pkgId`, or duplicate package `slug` per destination |
+| `409` | Duplicate `pkgId`, or duplicate package `slug` for the same destination |
 
 **Validation error example (`400`):**
 
@@ -268,7 +295,7 @@ Content-Type: application/json
 
 | Field | Required | Notes |
 |-------|----------|-------|
-| `slug` | Yes | Unique, e.g. `america-tour-packages` |
+| `slug` | Yes | Unique. If this slug already exists, the destination is **reused** (not duplicated) and its fields are updated from the request |
 | `name` | Yes | Display name |
 | `region` | Yes | `international` or `india` |
 | `description` | No | |
@@ -290,7 +317,7 @@ Content-Type: application/json
 | `sortOrder`, `active` | Yes / No | |
 | `inclusions[]` | No | `label`, `sortOrder` |
 | `itinerary[]` | No | `dayNumber`, `title`, `description`, `meals`, `accommodation`, `sortOrder`, `highlights[]` |
-| `detailSections[]` | No | `sectionType`: `highlights`, `inclusions`, `exclusions`, `flights_note`, `visa_note` |
+| `detailSections[]` | No | `sectionType`: any string up to 32 chars. Known types on GET detail: `highlights`, `inclusions`, `exclusions`, `flights_note`, `visa_note` (others are stored but not mapped to the public detail DTO) |
 | `hotels[]` | No | `name`, `nights`, `mealPlan`, `tourType`, `sortOrder` |
 | `terms[]` | No | `termText`, `sortOrder` |
 | `pricing` | No | `basePrice`, `currency` (3 chars), `allowsFlights`, `tourTypes` array → stored as CSV |

@@ -10,7 +10,7 @@ import java.util.List;
 
 public record CreateItineraryDayRequest(
         @Positive int dayNumber,
-        @NotBlank @Size(max = 200) String title,
+        @NotBlank @Size(max = 300) String title,
         String description,
         @Size(max = 120) String meals,
         @Size(max = 200) String accommodation,

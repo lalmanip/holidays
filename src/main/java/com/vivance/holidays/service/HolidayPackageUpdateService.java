@@ -1,6 +1,5 @@
 package com.vivance.holidays.service;
 
-import com.vivance.holidays.domain.entity.EntityFactory;
 import com.vivance.holidays.domain.entity.HolidayDestination;
 import com.vivance.holidays.domain.entity.HolidayPackageCategory;
 import com.vivance.holidays.domain.entity.HolidayTourPackage;
@@ -14,9 +13,10 @@ import com.vivance.holidays.web.exception.ResourceNotFoundException;
 import java.time.Instant;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 @Service
-public class HolidayPackageCreateService {
+public class HolidayPackageUpdateService {
 
     private final HolidayTourPackageRepository tourPackageRepository;
     private final HolidayPackageCategoryRepository categoryRepository;
@@ -24,7 +24,7 @@ public class HolidayPackageCreateService {
     private final HolidayPackageChildPersistence childPersistence;
     private final HolidayPackageUrlBuilder urlBuilder;
 
-    public HolidayPackageCreateService(
+    public HolidayPackageUpdateService(
             HolidayTourPackageRepository tourPackageRepository,
             HolidayPackageCategoryRepository categoryRepository,
             HolidayPackageDestinationResolver destinationResolver,
@@ -38,64 +38,56 @@ public class HolidayPackageCreateService {
     }
 
     @Transactional
-    public CreateHolidayPackageResponse createPackage(CreateHolidayPackageRequest request) {
-        destinationResolver.validateDestinationInput(request);
+    public CreateHolidayPackageResponse updatePackage(String pkgId, CreateHolidayPackageRequest request) {
+        validateUpdateDestinationInput(request);
 
-        HolidayDestination destination = destinationResolver.resolveForCreate(request);
+        HolidayTourPackage tourPackage = tourPackageRepository
+                .findWithDestinationByPkgId(pkgId)
+                .orElseThrow(() -> new ResourceNotFoundException("Package not found: " + pkgId));
+
         CreateTourPackageRequest pkgReq = request.tourPackage();
-
-        if (tourPackageRepository.existsByPkgId(pkgReq.pkgId())) {
-            throw new ConflictException("Package pkgId already exists: " + pkgReq.pkgId());
+        if (!pkgId.equals(pkgReq.pkgId())) {
+            throw new IllegalArgumentException(
+                    "Path pkgId must match tourPackage.pkgId in the request body");
         }
-        if (tourPackageRepository.existsByDestinationIdAndSlug(destination.getId(), pkgReq.slug())) {
+
+        HolidayDestination destination = destinationResolver.resolveForUpdate(request, tourPackage);
+        HolidayPackageCategory category = categoryRepository
+                .findByCodeAndActiveTrue(pkgReq.categoryCode())
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found: " + pkgReq.categoryCode()));
+
+        if (tourPackageRepository.existsByDestinationIdAndSlugAndIdNot(
+                destination.getId(), pkgReq.slug(), tourPackage.getId())) {
             throw new ConflictException(
                     "Package slug already exists for destination: " + destination.getSlug() + "/" + pkgReq.slug());
         }
 
-        HolidayPackageCategory category = loadCategory(pkgReq.categoryCode());
-
-        HolidayTourPackage tourPackage = EntityFactory.newTourPackage(
-                pkgReq.pkgId(),
-                pkgReq.slug(),
-                destination,
-                category,
-                pkgReq.title(),
-                pkgReq.imageUrl(),
-                pkgReq.price(),
-                pkgReq.days(),
-                pkgReq.nights(),
-                pkgReq.rating(),
-                pkgReq.reviewCount(),
-                pkgReq.badge(),
-                pkgReq.hasDetailPage(),
-                pkgReq.sortOrder(),
-                pkgReq.activeOrDefault());
+        tourPackage.setSlug(pkgReq.slug());
+        tourPackage.setDestination(destination);
+        tourPackage.setCategory(category);
+        tourPackage.setTitle(pkgReq.title());
+        tourPackage.setImageUrl(pkgReq.imageUrl());
+        tourPackage.setPrice(pkgReq.price());
+        tourPackage.setDays(pkgReq.days());
+        tourPackage.setNights(pkgReq.nights());
+        tourPackage.setRating(pkgReq.rating());
+        tourPackage.setReviewCount(pkgReq.reviewCount());
+        tourPackage.setBadge(pkgReq.badge());
+        tourPackage.setHasDetailPage(pkgReq.hasDetailPage());
+        tourPackage.setSortOrder(pkgReq.sortOrder());
+        tourPackage.setActive(pkgReq.activeOrDefault());
         tourPackage = tourPackageRepository.save(tourPackage);
 
+        childPersistence.deleteAllChildren(tourPackage);
         var counts = childPersistence.saveAllChildren(tourPackage, pkgReq);
-        return buildResponse("Holiday package created successfully", destination, tourPackage, category, pkgReq, counts);
-    }
 
-    private HolidayPackageCategory loadCategory(String categoryCode) {
-        return categoryRepository
-                .findByCodeAndActiveTrue(categoryCode)
-                .orElseThrow(() -> new ResourceNotFoundException("Category not found: " + categoryCode));
-    }
-
-    private CreateHolidayPackageResponse buildResponse(
-            String message,
-            HolidayDestination destination,
-            HolidayTourPackage tourPackage,
-            HolidayPackageCategory category,
-            CreateTourPackageRequest pkgReq,
-            CreateHolidayPackageResponse.CreatedCounts counts) {
         String listingUrl = urlBuilder.buildListingUrl(destination.getSlug(), destination.getRegion());
         String detailUrl = pkgReq.hasDetailPage()
                 ? urlBuilder.buildDetailUrl(destination.getSlug(), tourPackage.getSlug(), tourPackage.getPkgId())
                 : null;
 
         return new CreateHolidayPackageResponse(
-                message,
+                "Holiday package updated successfully",
                 destination.getId(),
                 destination.getSlug(),
                 destination.getName(),
@@ -107,5 +99,12 @@ public class HolidayPackageCreateService {
                 listingUrl,
                 counts,
                 Instant.now());
+    }
+
+    private void validateUpdateDestinationInput(CreateHolidayPackageRequest request) {
+        if (StringUtils.hasText(request.existingDestinationSlug()) && request.destination() != null) {
+            throw new IllegalArgumentException(
+                    "Provide either existingDestinationSlug or destination, not both");
+        }
     }
 }

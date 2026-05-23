@@ -8,7 +8,9 @@ import jakarta.validation.constraints.Size;
 @Schema(description = "Create destination + tour package with all related rows in one transaction")
 public record CreateHolidayPackageRequest(
         @Schema(
-                description = "If set, links package to an existing destination and ignores destination block",
+                description =
+                        "Optional. Links package to an existing destination by slug. "
+                                + "If omitted, destination.slug is used: existing slug reuses that destination, new slug creates one.",
                 example = "mauritius-tour-packages")
         @Size(max = 120)
         String existingDestinationSlug,

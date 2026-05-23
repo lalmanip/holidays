@@ -53,6 +53,7 @@ mvn spring-boot:run
 | Method | Path | Description |
 |--------|------|-------------|
 | POST | `/admin/packages` | Create destination + package + all child tables (one transaction) |
+| PUT | `/admin/packages/{pkgId}` | Update package + replace all child rows (same JSON body as create) |
 
 See [docs/backoffice-create-holiday-package.md](docs/backoffice-create-holiday-package.md) for sample request/response JSON.
 
