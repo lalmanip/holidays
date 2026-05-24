@@ -66,7 +66,7 @@ public class HolidayPackageUpdateService {
         tourPackage.setDestination(destination);
         tourPackage.setCategory(category);
         tourPackage.setTitle(pkgReq.title());
-        tourPackage.setImageUrl(pkgReq.imageUrl());
+        tourPackage.setImageUrl(pkgReq.imageUrlOrDefault());
         tourPackage.setPrice(pkgReq.price());
         tourPackage.setDays(pkgReq.days());
         tourPackage.setNights(pkgReq.nights());

@@ -311,7 +311,8 @@ Content-Type: application/json
 | `pkgId` | Yes | `pkg_id` — unique |
 | `slug` | Yes | Unique per destination |
 | `categoryCode` | Yes | Maps to `holidays_package_categories.code` |
-| `title`, `imageUrl`, `price`, `days`, `nights`, `rating`, `reviewCount` | Yes | |
+| `title`, `price`, `days`, `nights`, `rating`, `reviewCount` | Yes | |
+| `imageUrl` | No | Optional; stored as empty string if omitted |
 | `badge` | No | |
 | `hasDetailPage` | Yes | `0` / `1` in DB |
 | `sortOrder`, `active` | Yes / No | |

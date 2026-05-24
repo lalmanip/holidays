@@ -60,7 +60,7 @@ public class HolidayPackageCreateService {
                 destination,
                 category,
                 pkgReq.title(),
-                pkgReq.imageUrl(),
+                pkgReq.imageUrlOrDefault(),
                 pkgReq.price(),
                 pkgReq.days(),
                 pkgReq.nights(),

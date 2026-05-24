@@ -16,7 +16,7 @@ public record CreateTourPackageRequest(
         @NotBlank @Size(max = 160) String slug,
         @NotBlank @Size(max = 64) String categoryCode,
         @NotBlank @Size(max = 200) String title,
-        @NotBlank @Size(max = 500) String imageUrl,
+        @Size(max = 500) String imageUrl,
         @NotNull @DecimalMin("0") BigDecimal price,
         @Positive int days,
         @Positive int nights,
@@ -35,5 +35,13 @@ public record CreateTourPackageRequest(
 ) {
     public boolean activeOrDefault() {
         return active == null || active;
+    }
+
+    /** Empty string when omitted (DB column is NOT NULL). */
+    public String imageUrlOrDefault() {
+        if (imageUrl == null || imageUrl.isBlank()) {
+            return "";
+        }
+        return imageUrl.trim();
     }
 }
