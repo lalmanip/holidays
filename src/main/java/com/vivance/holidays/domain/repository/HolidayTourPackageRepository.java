@@ -25,6 +25,10 @@ public interface HolidayTourPackageRepository extends JpaRepository<HolidayTourP
     List<HolidayTourPackage> findByDestinationIdAndCategoryIdAndActiveTrueOrderBySortOrderAsc(
             Long destinationId, Long categoryId);
 
+    @EntityGraph(attributePaths = {"destination", "category", "inclusions"})
+    List<HolidayTourPackage> findByDestinationIdAndCategoryIdOrderBySortOrderAsc(
+            Long destinationId, Long categoryId);
+
     /**
      * Fetches only to-one associations. Collections are loaded via @BatchSize when accessed
      * (avoids MultipleBagFetchException from joining multiple List bags in one query).

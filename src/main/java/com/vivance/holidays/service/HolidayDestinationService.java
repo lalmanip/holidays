@@ -39,17 +39,37 @@ public class HolidayDestinationService {
 
     @Transactional(readOnly = true)
     public List<TrendingDestinationDto> getTrendingDestinations(String region) {
+        return mapTrendingDestinations(region, true);
+    }
+
+    @Transactional(readOnly = true)
+    public List<TrendingDestinationDto> getTrendingDestinationsForAdmin(String region) {
+        return mapTrendingDestinations(region, false);
+    }
+
+    private List<TrendingDestinationDto> mapTrendingDestinations(String region, boolean activeOnly) {
         DestinationRegion destinationRegion = DestinationRegion.fromDbValue(region);
-        return destinationRepository
-                .findByRegionAndActiveTrueOrderBySortOrderAsc(destinationRegion.getDbValue())
-                .stream()
-                .map(mapper::toTrendingDestination)
-                .toList();
+        List<HolidayDestination> destinations = activeOnly
+                ? destinationRepository.findByRegionAndActiveTrueOrderBySortOrderAsc(
+                        destinationRegion.getDbValue())
+                : destinationRepository.findByRegionOrderBySortOrderAsc(destinationRegion.getDbValue());
+        return destinations.stream().map(mapper::toTrendingDestination).toList();
     }
 
     @Transactional(readOnly = true)
     public DestinationHeaderDto getDestinationBySlug(String slug) {
-        HolidayDestination destination = destinationRepository.findBySlugAndActiveTrue(slug)
+        return mapDestinationBySlug(slug, true);
+    }
+
+    @Transactional(readOnly = true)
+    public DestinationHeaderDto getDestinationBySlugForAdmin(String slug) {
+        return mapDestinationBySlug(slug, false);
+    }
+
+    private DestinationHeaderDto mapDestinationBySlug(String slug, boolean activeOnly) {
+        HolidayDestination destination = (activeOnly
+                        ? destinationRepository.findBySlugAndActiveTrue(slug)
+                        : destinationRepository.findBySlug(slug))
                 .orElseThrow(() -> new ResourceNotFoundException("Destination not found: " + slug));
         return mapper.toDestinationHeader(destination);
     }
@@ -63,24 +83,39 @@ public class HolidayDestinationService {
 
     @Transactional(readOnly = true)
     public DestinationPackagesResponseDto getDestinationPackages(String slug, String categoryCode) {
+        return mapDestinationPackages(slug, categoryCode, true);
+    }
+
+    @Transactional(readOnly = true)
+    public DestinationPackagesResponseDto getDestinationPackagesForAdmin(String slug, String categoryCode) {
+        return mapDestinationPackages(slug, categoryCode, false);
+    }
+
+    private DestinationPackagesResponseDto mapDestinationPackages(
+            String slug, String categoryCode, boolean activeOnly) {
         if (!StringUtils.hasText(categoryCode)) {
             throw new IllegalArgumentException("Query parameter 'categoryCode' is required");
         }
 
-        HolidayDestination destination = destinationRepository.findBySlugAndActiveTrue(slug)
+        HolidayDestination destination = (activeOnly
+                        ? destinationRepository.findBySlugAndActiveTrue(slug)
+                        : destinationRepository.findBySlug(slug))
                 .orElseThrow(() -> new ResourceNotFoundException("Destination not found: " + slug));
 
-        HolidayPackageCategory category = categoryRepository.findByCodeAndActiveTrue(categoryCode)
+        HolidayPackageCategory category = (activeOnly
+                        ? categoryRepository.findByCodeAndActiveTrue(categoryCode)
+                        : categoryRepository.findByCode(categoryCode))
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found: " + categoryCode));
 
-        List<HolidayTourPackage> packages = packageRepository
-                .findByDestinationIdAndCategoryIdAndActiveTrueOrderBySortOrderAsc(
+        List<HolidayTourPackage> packages = activeOnly
+                ? packageRepository.findByDestinationIdAndCategoryIdAndActiveTrueOrderBySortOrderAsc(
+                        destination.getId(), category.getId())
+                : packageRepository.findByDestinationIdAndCategoryIdOrderBySortOrderAsc(
                         destination.getId(), category.getId());
 
         return new DestinationPackagesResponseDto(
                 mapper.toDestinationHeader(destination),
                 mapper.toCategory(category),
-                packages.stream().map(mapper::toPackageCard).toList()
-        );
+                packages.stream().map(mapper::toPackageCard).toList());
     }
 }

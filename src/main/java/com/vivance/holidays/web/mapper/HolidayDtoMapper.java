@@ -66,7 +66,8 @@ public class HolidayDtoMapper {
                 destination.getName(),
                 destination.getHeroImageUrl(),
                 destination.getStartingPrice(),
-                listingPath
+                listingPath,
+                destination.isActive()
         );
     }
 
@@ -77,7 +78,8 @@ public class HolidayDtoMapper {
                 destination.getName(),
                 destination.getDescription(),
                 destination.getHeroImageUrl(),
-                destination.getStartingPrice()
+                destination.getStartingPrice(),
+                destination.isActive()
         );
     }
 
@@ -106,7 +108,8 @@ public class HolidayDtoMapper {
                 pkg.getBadge(),
                 inclusions,
                 pkg.isHasDetailPage(),
-                detailUrl
+                detailUrl,
+                pkg.isActive()
         );
     }
 

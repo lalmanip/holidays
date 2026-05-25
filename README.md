@@ -42,22 +42,25 @@ mvn spring-boot:run
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | `/hero` | Hero slides + ticker |
-| GET | `/destinations/trending?region=international\|india` | Trending destination tiles |
-| GET | `/destinations/{slug}` | Destination listing header |
+| GET | `/destinations/trending?region=international\|india` | Trending destination tiles (active only) |
+| GET | `/destinations/{slug}` | Destination listing header (active only) |
 | GET | `/categories` | Active package categories |
-| GET | `/destinations/{slug}/packages?categoryCode=best-seller` | Package cards by category |
+| GET | `/destinations/{slug}/packages?categoryCode=best-seller` | Active package cards by category |
 | GET | `/packages/{pkgId}` | Full package detail (itinerary, details, pricing, terms) |
 
 ### Backoffice (admin)
 
 | Method | Path | Description |
 |--------|------|-------------|
+| GET | `/admin/destinations/trending?region=international\|india` | Trending destination tiles (active and inactive) |
+| GET | `/admin/destinations/{slug}` | Destination listing header (active and inactive) |
+| GET | `/admin/destinations/{slug}/packages?categoryCode=best-seller` | Package cards by category (active and inactive) |
 | POST | `/admin/packages` | Create destination + package + all child tables (one transaction) |
 | PUT | `/admin/packages/{pkgId}` | Update package + replace all child rows (same JSON body as create) |
 
 See [docs/backoffice-create-holiday-package.md](docs/backoffice-create-holiday-package.md) for sample request/response JSON.
 
-Public reads filter `is_active = 1` and order by `sort_order` ascending.
+Public reads filter `is_active = 1` and order by `sort_order` ascending. Admin trending destinations returns all destinations for the region regardless of `is_active`.
 
 ## Project layout
 

@@ -14,4 +14,6 @@ public interface HolidayDestinationRepository extends JpaRepository<HolidayDesti
     Optional<HolidayDestination> findBySlugAndActiveTrue(String slug);
 
     List<HolidayDestination> findByRegionAndActiveTrueOrderBySortOrderAsc(String region);
+
+    List<HolidayDestination> findByRegionOrderBySortOrderAsc(String region);
 }

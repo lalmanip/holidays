@@ -10,4 +10,6 @@ public interface HolidayPackageCategoryRepository extends JpaRepository<HolidayP
     List<HolidayPackageCategory> findByActiveTrueOrderBySortOrderAsc();
 
     Optional<HolidayPackageCategory> findByCodeAndActiveTrue(String code);
+
+    Optional<HolidayPackageCategory> findByCode(String code);
 }
