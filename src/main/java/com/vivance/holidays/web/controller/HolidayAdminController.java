@@ -1,8 +1,10 @@
 package com.vivance.holidays.web.controller;
 
 import com.vivance.holidays.service.HolidayDestinationService;
+import com.vivance.holidays.service.HolidayMediaService;
 import com.vivance.holidays.service.HolidayPackageCreateService;
 import com.vivance.holidays.service.HolidayPackageUpdateService;
+import com.vivance.holidays.web.dto.HolidayMediaUploadResponse;
 import com.vivance.holidays.web.dto.DestinationHeaderDto;
 import com.vivance.holidays.web.dto.DestinationPackagesResponseDto;
 import com.vivance.holidays.web.dto.TrendingDestinationDto;
@@ -28,8 +30,10 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @Tag(name = "Holidays Admin", description = "Backoffice APIs to create and update holiday packages")
 @RestController
@@ -40,14 +44,36 @@ public class HolidayAdminController {
     private final HolidayPackageCreateService createService;
     private final HolidayPackageUpdateService updateService;
     private final HolidayDestinationService destinationService;
+    private final HolidayMediaService mediaService;
 
     public HolidayAdminController(
             HolidayPackageCreateService createService,
             HolidayPackageUpdateService updateService,
-            HolidayDestinationService destinationService) {
+            HolidayDestinationService destinationService,
+            HolidayMediaService mediaService) {
         this.createService = createService;
         this.updateService = updateService;
         this.destinationService = destinationService;
+        this.mediaService = mediaService;
+    }
+
+    @Operation(
+            summary = "Upload holiday image",
+            description =
+                    "Stores an image on disk and returns a public URL for heroImageUrl / imageUrl fields")
+    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = HolidayMediaUploadResponse.class)))
+    @PostMapping(
+            value = "/media/upload",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public HolidayMediaUploadResponse uploadMedia(
+            @Parameter(description = "destination-hero or package", required = true)
+            @RequestPart("kind")
+            @NotBlank
+            String kind,
+            @RequestPart("file") MultipartFile file)
+            throws java.io.IOException {
+        return mediaService.upload(kind, file);
     }
 
     @Operation(

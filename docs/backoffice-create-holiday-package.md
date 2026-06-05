@@ -299,7 +299,7 @@ Content-Type: application/json
 | `name` | Yes | Display name |
 | `region` | Yes | `international` or `india` |
 | `description` | No | |
-| `heroImageUrl` | No | |
+| `heroImageUrl` | No | Public image URL (from admin upload or external link) |
 | `startingPrice` | Yes | Decimal |
 | `active` | No | Default `true` |
 | `sortOrder` | No | Default `0` |
@@ -312,7 +312,38 @@ Content-Type: application/json
 | `slug` | Yes | Unique per destination |
 | `categoryCode` | Yes | Maps to `holidays_package_categories.code` |
 | `title`, `price`, `days`, `nights`, `rating`, `reviewCount` | Yes | |
-| `imageUrl` | No | Optional; stored as empty string if omitted |
+| `imageUrl` | No | Optional; public URL from upload or external link |
+
+---
+
+## Image upload (admin)
+
+`POST /api/v1/holidays/admin/media/upload` (`multipart/form-data`)
+
+| Part | Value |
+|------|--------|
+| `kind` | `destination-hero` or `package` |
+| `file` | JPG, PNG, WEBP, or GIF (max 5 MB) |
+
+**Response:**
+
+```json
+{
+  "storedPath": "destinations/hero_1717000000000_a1b2c3d4.jpg",
+  "url": "http://localhost:8095/api/v1/holidays/media/destinations/hero_1717000000000_a1b2c3d4.jpg"
+}
+```
+
+Store `url` in `destination.heroImageUrl` or `tourPackage.imageUrl` when creating/updating a package.
+
+Images are served publicly at `GET /api/v1/holidays/media/{folder}/{fileName}`.
+
+Configure storage (no DDL):
+
+| Env | Default |
+|-----|---------|
+| `HOLIDAY_MEDIA_STORAGE_DIR` | `./data/holiday-media` |
+| `HOLIDAY_MEDIA_PUBLIC_BASE_URL` | `http://localhost:8095` |
 | `badge` | No | |
 | `hasDetailPage` | Yes | `0` / `1` in DB |
 | `sortOrder`, `active` | Yes / No | |
