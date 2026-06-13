@@ -10,8 +10,23 @@ import org.springframework.data.repository.query.Param;
 
 public interface HolidayTourPackageRepository extends JpaRepository<HolidayTourPackage, Long> {
 
+    boolean existsByPkgId(String pkgId);
+
+    boolean existsByDestinationIdAndSlug(Long destinationId, String slug);
+
+    Optional<HolidayTourPackage> findByPkgId(String pkgId);
+
+    boolean existsByDestinationIdAndSlugAndIdNot(Long destinationId, String slug, Long id);
+
+    @EntityGraph(attributePaths = {"destination", "category"})
+    Optional<HolidayTourPackage> findWithDestinationByPkgId(String pkgId);
+
     @EntityGraph(attributePaths = {"destination", "category", "inclusions"})
     List<HolidayTourPackage> findByDestinationIdAndCategoryIdAndActiveTrueOrderBySortOrderAsc(
+            Long destinationId, Long categoryId);
+
+    @EntityGraph(attributePaths = {"destination", "category", "inclusions"})
+    List<HolidayTourPackage> findByDestinationIdAndCategoryIdOrderBySortOrderAsc(
             Long destinationId, Long categoryId);
 
     /**

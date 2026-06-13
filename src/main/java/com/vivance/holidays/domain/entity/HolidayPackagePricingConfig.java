@@ -54,4 +54,24 @@ public class HolidayPackagePricingConfig {
     public String getTourTypes() {
         return tourTypes;
     }
+
+    public void setTourPackage(HolidayTourPackage tourPackage) {
+        this.tourPackage = tourPackage;
+    }
+
+    public void setBasePrice(BigDecimal basePrice) {
+        this.basePrice = basePrice;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = currency;
+    }
+
+    public void setAllowsFlights(boolean allowsFlights) {
+        this.allowsFlights = allowsFlights;
+    }
+
+    public void setTourTypes(String tourTypes) {
+        this.tourTypes = tourTypes;
+    }
 }

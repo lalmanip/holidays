@@ -52,7 +52,9 @@ public class HolidayApiController {
         return heroService.getHero();
     }
 
-    @Operation(summary = "Trending destinations", description = "International or India trending tiles")
+    @Operation(
+            summary = "Trending destinations",
+            description = "International or India trending tiles (active destinations only)")
     @GetMapping(value = "/destinations/trending", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<TrendingDestinationDto> getTrendingDestinations(
             @Parameter(description = "international or india", required = true)
@@ -63,7 +65,7 @@ public class HolidayApiController {
         return destinationService.getTrendingDestinations(region.toLowerCase());
     }
 
-    @Operation(summary = "Destination header", description = "Listing page hero for a destination slug")
+    @Operation(summary = "Destination header", description = "Listing page hero for an active destination slug")
     @ApiResponse(responseCode = "404", description = "Destination not found or inactive")
     @GetMapping(value = "/destinations/{slug}", produces = MediaType.APPLICATION_JSON_VALUE)
     public DestinationHeaderDto getDestination(
@@ -78,7 +80,7 @@ public class HolidayApiController {
         return destinationService.getActiveCategories();
     }
 
-    @Operation(summary = "Destination packages by category")
+    @Operation(summary = "Destination packages by category", description = "Active package cards for a destination and category")
     @ApiResponse(responseCode = "404", description = "Destination or category not found")
     @GetMapping(value = "/destinations/{slug}/packages", produces = MediaType.APPLICATION_JSON_VALUE)
     public DestinationPackagesResponseDto getDestinationPackages(

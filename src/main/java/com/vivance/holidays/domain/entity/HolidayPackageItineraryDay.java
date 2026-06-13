@@ -30,7 +30,7 @@ public class HolidayPackageItineraryDay {
     @Column(name = "day_number", nullable = false)
     private int dayNumber;
 
-    @Column(nullable = false, length = 200)
+    @Column(nullable = false, length = 300)
     private String title;
 
     @Column(columnDefinition = "TEXT")
@@ -72,5 +72,37 @@ public class HolidayPackageItineraryDay {
 
     public List<HolidayPackageItineraryHighlight> getHighlights() {
         return highlights;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setTourPackage(HolidayTourPackage tourPackage) {
+        this.tourPackage = tourPackage;
+    }
+
+    public void setDayNumber(int dayNumber) {
+        this.dayNumber = dayNumber;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void setMeals(String meals) {
+        this.meals = meals;
+    }
+
+    public void setAccommodation(String accommodation) {
+        this.accommodation = accommodation;
+    }
+
+    public void setSortOrder(int sortOrder) {
+        this.sortOrder = sortOrder;
     }
 }

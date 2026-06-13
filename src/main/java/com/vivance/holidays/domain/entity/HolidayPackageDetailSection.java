@@ -38,4 +38,20 @@ public class HolidayPackageDetailSection {
     public String getContent() {
         return content;
     }
+
+    public void setTourPackage(HolidayTourPackage tourPackage) {
+        this.tourPackage = tourPackage;
+    }
+
+    public void setSectionType(String sectionType) {
+        this.sectionType = sectionType;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+
+    public void setSortOrder(int sortOrder) {
+        this.sortOrder = sortOrder;
+    }
 }

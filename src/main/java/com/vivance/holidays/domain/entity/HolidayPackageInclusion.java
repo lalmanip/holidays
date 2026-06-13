@@ -31,4 +31,16 @@ public class HolidayPackageInclusion {
     public String getLabel() {
         return label;
     }
+
+    public void setTourPackage(HolidayTourPackage tourPackage) {
+        this.tourPackage = tourPackage;
+    }
+
+    public void setLabel(String label) {
+        this.label = label;
+    }
+
+    public void setSortOrder(int sortOrder) {
+        this.sortOrder = sortOrder;
+    }
 }

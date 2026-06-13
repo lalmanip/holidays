@@ -19,5 +19,7 @@ public record PackageCardDto(
         List<String> inclusions,
         boolean hasDetailPage,
         @Schema(description = "Detail page URL when hasDetailPage is true")
-        String detailUrl
+        String detailUrl,
+        @Schema(description = "Whether the package is published (is_active)")
+        boolean active
 ) {}

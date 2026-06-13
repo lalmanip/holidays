@@ -1,0 +1,91 @@
+# Deploy holidays-api to dev Kubernetes on VPS when pushing to `dev`.
+# Production (main) is intentionally not wired yet.
+#
+# Required GitHub secrets:
+#   DOCKERHUB_USERNAME, DOCKERHUB_TOKEN, VPS_HOST, VPS_USER, VPS_SSH_KEY
+#
+# Optional GitHub variables (Repository → Settings → Secrets and variables → Actions):
+#   K8S_NAMESPACE          (default: default)
+#   K8S_DEPLOYMENT_NAME    (default: vivance-holidays-api)
+#   K8S_CONTAINER_NAME     (default: vivance-holidays-api)
+
+name: Deploy Dev
+
+on:
+  push:
+    branches: [dev]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-dev-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  IMAGE_REPO: holidays-api
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment: dev
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+          cache: maven
+
+      - name: Resolve image tag
+        id: meta
+        run: |
+          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout | sed 's/-SNAPSHOT//')
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          IMAGE_TAG="${VERSION}-${SHORT_SHA}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "short_sha=${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+          echo "image_tag=${IMAGE_TAG}" >> "$GITHUB_OUTPUT"
+          echo "Image tag: ${IMAGE_TAG}"
+
+      - name: Build JAR
+        run: mvn -B clean package -DskipTests
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_REPO }}:${{ steps.meta.outputs.image_tag }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_REPO }}:dev-latest
+
+      - name: Deploy to Kubernetes on VPS
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_REPO }}:${{ steps.meta.outputs.image_tag }}
+          K8S_NAMESPACE: ${{ vars.K8S_NAMESPACE || 'default' }}
+          K8S_DEPLOYMENT_NAME: ${{ vars.K8S_DEPLOYMENT_NAME || 'vivance-holidays-api' }}
+          K8S_CONTAINER_NAME: ${{ vars.K8S_CONTAINER_NAME || 'vivance-holidays-api' }}
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          envs: IMAGE,K8S_NAMESPACE,K8S_DEPLOYMENT_NAME,K8S_CONTAINER_NAME
+          script_stop: true
+          script: |
+            set -euo pipefail
+            echo "Deploying ${IMAGE} to namespace ${K8S_NAMESPACE}..."
+            kubectl -n "${K8S_NAMESPACE}" set image "deployment/${K8S_DEPLOYMENT_NAME}" \
+              "${K8S_CONTAINER_NAME}=${IMAGE}"
+            kubectl -n "${K8S_NAMESPACE}" rollout status "deployment/${K8S_DEPLOYMENT_NAME}" --timeout=180s
+            kubectl -n "${K8S_NAMESPACE}" get pods -l app=vivance-holidays-api -o wide
+            echo "Dev deploy complete: ${IMAGE}"

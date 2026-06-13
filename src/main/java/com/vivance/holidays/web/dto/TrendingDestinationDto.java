@@ -11,5 +11,7 @@ public record TrendingDestinationDto(
         @Schema(description = "Starting price in INR")
         java.math.BigDecimal startingPrice,
         @Schema(description = "Listing page path; null for India tiles without routes yet")
-        String listingPath
+        String listingPath,
+        @Schema(description = "Whether the destination is published (is_active)")
+        boolean active
 ) {}

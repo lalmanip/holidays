@@ -2,7 +2,6 @@ package com.vivance.holidays.web.mapper;
 
 import com.vivance.holidays.config.HolidaysProperties;
 import com.vivance.holidays.domain.DestinationRegion;
-import com.vivance.holidays.domain.DetailSectionType;
 import com.vivance.holidays.domain.entity.HolidayDepartureCity;
 import com.vivance.holidays.domain.entity.HolidayDestination;
 import com.vivance.holidays.domain.entity.HolidayHeroSlide;
@@ -67,7 +66,8 @@ public class HolidayDtoMapper {
                 destination.getName(),
                 destination.getHeroImageUrl(),
                 destination.getStartingPrice(),
-                listingPath
+                listingPath,
+                destination.isActive()
         );
     }
 
@@ -78,7 +78,8 @@ public class HolidayDtoMapper {
                 destination.getName(),
                 destination.getDescription(),
                 destination.getHeroImageUrl(),
-                destination.getStartingPrice()
+                destination.getStartingPrice(),
+                destination.isActive()
         );
     }
 
@@ -107,7 +108,8 @@ public class HolidayDtoMapper {
                 pkg.getBadge(),
                 inclusions,
                 pkg.isHasDetailPage(),
-                detailUrl
+                detailUrl,
+                pkg.isActive()
         );
     }
 
@@ -173,13 +175,15 @@ public class HolidayDtoMapper {
         String visaNote = "";
 
         for (HolidayPackageDetailSection section : pkg.getDetailSections()) {
-            DetailSectionType type = DetailSectionType.fromDbValue(section.getSectionType());
+            String type = section.getSectionType() != null
+                    ? section.getSectionType().trim().toLowerCase()
+                    : "";
             switch (type) {
-                case HIGHLIGHTS -> highlights.add(section.getContent());
-                case INCLUSIONS -> inclusions.add(section.getContent());
-                case EXCLUSIONS -> exclusions.add(section.getContent());
-                case FLIGHTS_NOTE -> flightsNote = section.getContent();
-                case VISA_NOTE -> visaNote = section.getContent();
+                case "highlights" -> highlights.add(section.getContent());
+                case "inclusions" -> inclusions.add(section.getContent());
+                case "exclusions" -> exclusions.add(section.getContent());
+                case "flights_note" -> flightsNote = section.getContent();
+                case "visa_note" -> visaNote = section.getContent();
                 default -> { }
             }
         }

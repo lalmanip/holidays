@@ -1,0 +1,373 @@
+# Backoffice — Create & Update Holiday Package API
+
+## Endpoints
+
+| Action | Method | URL | Success |
+|--------|--------|-----|---------|
+| Create | `POST` | `/api/v1/holidays/admin/packages` | `201 Created` |
+| Update | `PUT` | `/api/v1/holidays/admin/packages/{pkgId}` | `200 OK` |
+
+**Content-Type:** `application/json` for both.
+
+**Base URL (local):** `http://localhost:8095`  
+**Base URL (dev):** `http://<your-host>:30095` (NodePort) or your ingress URL
+
+---
+
+## Update (`PUT /packages/{pkgId}`)
+
+Use the **same JSON body as create**. The path `{pkgId}` must match `tourPackage.pkgId` in the body.
+
+| Destination in body | Behaviour |
+|-------------------|-----------|
+| Omitted | Keeps the package linked to its current destination |
+| `destination` object | Updates that linked destination in place |
+| `existingDestinationSlug` | Re-links the package to another destination |
+
+Child rows (inclusions, itinerary, sections, hotels, terms, pricing) are **deleted and re-inserted** from the request — send the full package payload on every edit.
+
+**Example:**
+
+```http
+PUT /api/v1/holidays/admin/packages/PKG-GAYA-CLASSIC-001 HTTP/1.1
+Content-Type: application/json
+```
+
+(Same JSON as create; `tourPackage.pkgId` must be `PKG-GAYA-CLASSIC-001`.)
+
+**Response:** same shape as create, with `"message": "Holiday package updated successfully"`.
+
+---
+
+## Create (`POST /packages`)
+
+## What it does
+
+Creates rows in one database transaction (IDs are auto-generated; do not send primary keys):
+
+1. `holidays_destinations` — **creates** a destination when `destination.slug` is new, **reuses** the existing row when the slug already exists (so multiple packages can be added under the same destination with the same request shape)
+2. `holidays_tour_packages`
+3. `holidays_package_inclusions`
+4. `holidays_package_itinerary_days` + `holidays_package_itinerary_highlights`
+5. `holidays_package_detail_sections`
+6. `holidays_package_hotels`
+7. `holidays_package_terms`
+8. `holidays_package_pricing_config`
+
+**Category** is referenced by `categoryCode` (e.g. `senior`, `best-seller`) — must already exist in `holidays_package_categories`.
+
+---
+
+## Sample request (matches your USA / Senior Citizen example)
+
+```http
+POST /api/v1/holidays/admin/packages HTTP/1.1
+Host: localhost:8095
+Content-Type: application/json
+```
+
+```json
+{
+  "destination": {
+    "slug": "america-tour-packages",
+    "name": "USA",
+    "region": "international",
+    "description": "Statue of Liberty, white house",
+    "heroImageUrl": "/statueofliberty.jpg",
+    "startingPrice": 99000.00,
+    "active": true,
+    "sortOrder": 1
+  },
+  "tourPackage": {
+    "pkgId": "PKG-USA-CLASSIC-001",
+    "slug": "america-classic-package",
+    "categoryCode": "senior",
+    "title": "America Classic Package",
+    "imageUrl": "/usa/usa.jpg",
+    "price": 99900.00,
+    "days": 5,
+    "nights": 4,
+    "rating": 4.7,
+    "reviewCount": 289,
+    "badge": "Recommended",
+    "hasDetailPage": true,
+    "sortOrder": 1,
+    "active": true,
+    "inclusions": [
+      { "label": "Hotel", "sortOrder": 1 },
+      { "label": "Flight", "sortOrder": 2 }
+    ],
+    "itinerary": [
+      {
+        "dayNumber": 1,
+        "title": "Arrive in Mauritius",
+        "description": "Welcome to Mauritius. Transfer to your beach resort. Evening at leisure by the lagoon.",
+        "meals": "Dinner",
+        "accommodation": "4★ Beach Resort — Port Louis area",
+        "sortOrder": 1,
+        "highlights": [
+          { "highlight": "Beach leisure", "sortOrder": 1 }
+        ]
+      },
+      {
+        "dayNumber": 2,
+        "title": "North Island Tour",
+        "description": "Full-day sightseeing covering Port Louis, Caudan Waterfront, and northern coastal views.",
+        "meals": "Breakfast, Lunch",
+        "accommodation": "4★ Beach Resort",
+        "sortOrder": 2,
+        "highlights": [
+          { "highlight": "Optional activities", "sortOrder": 1 }
+        ]
+      },
+      {
+        "dayNumber": 3,
+        "title": "South & Chamarel",
+        "description": "Explore the south — Chamarel coloured earth, waterfalls, and scenic viewpoints.",
+        "meals": "Breakfast, Lunch",
+        "accommodation": "4★ Beach Resort",
+        "sortOrder": 3,
+        "highlights": [
+          { "highlight": "Sunset views", "sortOrder": 1 }
+        ]
+      }
+    ],
+    "detailSections": [
+      {
+        "sectionType": "highlights",
+        "content": "Dedicated tour coordinator support",
+        "sortOrder": 5
+      },
+      {
+        "sectionType": "inclusions",
+        "content": "Accommodation on twin-sharing basis",
+        "sortOrder": 1
+      },
+      {
+        "sectionType": "exclusions",
+        "content": "International airfare (unless flight add-on selected)",
+        "sortOrder": 1
+      },
+      {
+        "sectionType": "flights_note",
+        "content": "Flights can be added during Calculate Price. Round-trip economy seats from Mumbai/Delhi/Bengaluru subject to availability.",
+        "sortOrder": 1
+      },
+      {
+        "sectionType": "visa_note",
+        "content": "Mauritius offers visa-on-arrival for Indian passport holders. Valid passport (6+ months) and return ticket required.",
+        "sortOrder": 1
+      }
+    ],
+    "hotels": [
+      {
+        "name": "Holiday Inn (or similar)",
+        "nights": "4 Nights",
+        "mealPlan": "Breakfast + selected lunches/dinners",
+        "tourType": null,
+        "sortOrder": 1
+      }
+    ],
+    "terms": [
+      {
+        "termText": "Prices are per person on twin-sharing basis and subject to availability.",
+        "sortOrder": 1
+      },
+      {
+        "termText": "Rates may change based on travel dates, flight fares, and hotel inventory.",
+        "sortOrder": 2
+      }
+    ],
+    "pricing": {
+      "basePrice": 99990.00,
+      "currency": "INR",
+      "allowsFlights": true,
+      "tourTypes": ["Standard", "Value", "Premium"]
+    }
+  }
+}
+```
+
+### Use an existing destination (no new destination row)
+
+```json
+{
+  "existingDestinationSlug": "mauritius-tour-packages",
+  "tourPackage": {
+    "pkgId": "PKG-MRU-SENIOR-001",
+    "slug": "mauritius-senior-package",
+    "categoryCode": "senior",
+    "title": "Mauritius Senior Special",
+    "imageUrl": "https://example.com/image.jpg",
+    "price": 45000,
+    "days": 5,
+    "nights": 4,
+    "rating": 4.5,
+    "reviewCount": 10,
+    "hasDetailPage": false,
+    "sortOrder": 1,
+    "inclusions": [
+      { "label": "Hotel", "sortOrder": 1 }
+    ]
+  }
+}
+```
+
+---
+
+## Sample response (`201 Created`)
+
+```json
+{
+  "message": "Holiday package created successfully",
+  "destinationId": 15,
+  "destinationSlug": "america-tour-packages",
+  "destinationName": "USA",
+  "packageInternalId": 4,
+  "pkgId": "PKG-USA-CLASSIC-001",
+  "packageSlug": "america-classic-package",
+  "categoryCode": "senior",
+  "detailUrl": "/international-tour-packages/america-tour-packages/america-classic-package?pkgId=PKG-USA-CLASSIC-001",
+  "listingUrl": "/international-tour-packages/america-tour-packages",
+  "counts": {
+    "inclusions": 2,
+    "itineraryDays": 3,
+    "itineraryHighlights": 3,
+    "detailSections": 5,
+    "hotels": 1,
+    "terms": 2,
+    "pricingConfig": 1
+  },
+  "createdAt": "2026-05-22T20:15:30.123Z"
+}
+```
+
+| Field | Meaning |
+|-------|---------|
+| `destinationId` | `holidays_destinations.id` (auto-generated) |
+| `packageInternalId` | `holidays_tour_packages.id` — used as FK in child tables |
+| `pkgId` | Business id shown on website (`?pkgId=`) |
+| `detailUrl` | Frontend detail page path when `hasDetailPage` is true |
+| `listingUrl` | International listing path (null for `india` region) |
+| `counts` | Number of child rows inserted |
+
+---
+
+## Error responses
+
+| HTTP | When |
+|------|------|
+| `400` | Validation failed, or missing destination |
+| `404` | Unknown `categoryCode` or `existingDestinationSlug` |
+| `409` | Duplicate `pkgId`, or duplicate package `slug` for the same destination |
+
+**Validation error example (`400`):**
+
+```json
+{
+  "type": "about:blank",
+  "title": "Validation Failed",
+  "status": 400,
+  "detail": "Request validation failed",
+  "errors": {
+    "tourPackage.categoryCode": "must not be blank"
+  },
+  "timestamp": "2026-05-22T20:10:00.123Z"
+}
+```
+
+**Conflict example (`409`):**
+
+```json
+{
+  "type": "about:blank",
+  "title": "Conflict",
+  "status": 409,
+  "detail": "Package pkgId already exists: PKG-USA-CLASSIC-001"
+}
+```
+
+---
+
+## Field reference
+
+### `destination` (required unless `existingDestinationSlug` is set)
+
+| Field | Required | Notes |
+|-------|----------|-------|
+| `slug` | Yes | Unique. If this slug already exists, the destination is **reused** (not duplicated) and its fields are updated from the request |
+| `name` | Yes | Display name |
+| `region` | Yes | `international` or `india` |
+| `description` | No | |
+| `heroImageUrl` | No | Public image URL (from admin upload or external link) |
+| `startingPrice` | Yes | Decimal |
+| `active` | No | Default `true` |
+| `sortOrder` | No | Default `0` |
+
+### `tourPackage`
+
+| Field | Required | DB column / notes |
+|-------|----------|-------------------|
+| `pkgId` | Yes | `pkg_id` — unique |
+| `slug` | Yes | Unique per destination |
+| `categoryCode` | Yes | Maps to `holidays_package_categories.code` |
+| `title`, `price`, `days`, `nights`, `rating`, `reviewCount` | Yes | |
+| `imageUrl` | No | Optional; public URL from upload or external link |
+
+---
+
+## Image upload (admin)
+
+`POST /api/v1/holidays/admin/media/upload` (`multipart/form-data`)
+
+| Part | Value |
+|------|--------|
+| `kind` | `destination-hero` or `package` |
+| `file` | JPG, PNG, WEBP, or GIF (max 5 MB) |
+
+**Response:**
+
+```json
+{
+  "storedPath": "destinations/hero_1717000000000_a1b2c3d4.jpg",
+  "url": "http://localhost:8095/api/v1/holidays/media/destinations/hero_1717000000000_a1b2c3d4.jpg"
+}
+```
+
+Store `url` in `destination.heroImageUrl` or `tourPackage.imageUrl` when creating/updating a package.
+
+Images are served publicly at `GET /api/v1/holidays/media/{folder}/{fileName}`.
+
+Configure storage (no DDL):
+
+| Env | Default |
+|-----|---------|
+| `HOLIDAY_MEDIA_STORAGE_DIR` | `./data/holiday-media` |
+| `HOLIDAY_MEDIA_PUBLIC_BASE_URL` | `http://localhost:8095` |
+| `badge` | No | |
+| `hasDetailPage` | Yes | `0` / `1` in DB |
+| `sortOrder`, `active` | Yes / No | |
+| `inclusions[]` | No | `label`, `sortOrder` |
+| `itinerary[]` | No | `dayNumber`, `title`, `description`, `meals`, `accommodation`, `sortOrder`, `highlights[]` |
+| `detailSections[]` | No | `sectionType`: any string up to 32 chars. Known types on GET detail: `highlights`, `inclusions`, `exclusions`, `flights_note`, `visa_note` (others are stored but not mapped to the public detail DTO) |
+| `hotels[]` | No | `name`, `nights`, `mealPlan`, `tourType`, `sortOrder` |
+| `terms[]` | No | `termText`, `sortOrder` |
+| `pricing` | No | `basePrice`, `currency` (3 chars), `allowsFlights`, `tourTypes` array → stored as CSV |
+
+---
+
+## Verify after create
+
+```http
+GET /api/v1/holidays/packages/PKG-USA-CLASSIC-001
+```
+
+```http
+GET /api/v1/holidays/destinations/america-tour-packages/packages?categoryCode=senior
+```
+
+---
+
+## Swagger
+
+Open `http://localhost:8095/swagger-ui.html` → **Holidays Admin** → **POST /api/v1/holidays/admin/packages**.

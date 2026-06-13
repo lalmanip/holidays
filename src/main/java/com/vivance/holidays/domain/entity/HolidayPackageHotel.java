@@ -48,4 +48,28 @@ public class HolidayPackageHotel {
     public String getMealPlan() {
         return mealPlan;
     }
+
+    public void setTourPackage(HolidayTourPackage tourPackage) {
+        this.tourPackage = tourPackage;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setNightsLabel(String nightsLabel) {
+        this.nightsLabel = nightsLabel;
+    }
+
+    public void setMealPlan(String mealPlan) {
+        this.mealPlan = mealPlan;
+    }
+
+    public void setTourType(String tourType) {
+        this.tourType = tourType;
+    }
+
+    public void setSortOrder(int sortOrder) {
+        this.sortOrder = sortOrder;
+    }
 }

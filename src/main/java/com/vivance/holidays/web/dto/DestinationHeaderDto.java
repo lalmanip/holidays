@@ -10,5 +10,7 @@ public record DestinationHeaderDto(
         String name,
         String description,
         String heroImageUrl,
-        BigDecimal startingPrice
+        BigDecimal startingPrice,
+        @Schema(description = "Whether the destination is published (is_active)")
+        boolean active
 ) {}
