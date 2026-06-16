@@ -14,6 +14,8 @@ data:
     spring:
       application:
         name: vivance-holidays-api
+      profiles:
+        active: dev
       datasource:
         url: ${SPRING_DATASOURCE_URL:jdbc:mysql://77.37.45.41:3306/vivance_java?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
         username: ${SPRING_DATASOURCE_USERNAME:root}
